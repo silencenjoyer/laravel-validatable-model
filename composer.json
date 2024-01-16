@@ -34,7 +34,7 @@
         }
     },
     "scripts": {
-        "test": "vendor/bin/phpunit tests",
+        "test": "php vendor/bin/phpunit tests",
         "test-coverage": "@php -dzend_extension=xdebug.so -dxdebug.mode=coverage vendor/bin/phpunit tests --coverage-html tests/coverage"
     },
     "config": {

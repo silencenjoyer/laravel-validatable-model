@@ -10,7 +10,6 @@ use Orchestra\Testbench\TestCase;
 class ValidationTraitTest extends TestCase
 {
     protected Model $model;
-    protected string $modelClass;
 
     /**
      * {@inheritDoc}
@@ -44,10 +43,6 @@ class ValidationTraitTest extends TestCase
      */
     protected function createModel(): Model
     {
-        if (isset($this->modelClass)) {
-            return new $this->modelClass();
-        }
-
         return new class extends Model
         {
             use ValidationTrait;
@@ -129,12 +124,11 @@ class ValidationTraitTest extends TestCase
     }
 
     /**
-     * This data provider contains invalid inputs for tests that are expected
-     * to fail during validation.
+     * This data provider contains single invalid input for tests.
      *
-     * @return array
+     * @return array[]
      */
-    public function invalidData(): array
+    public function singleInvalidData(): array
     {
         return [
             [
@@ -143,19 +137,34 @@ class ValidationTraitTest extends TestCase
                     'email' => 'test.com',
                 ],
             ],
-            [
-                [
-                    'name' => '```',
-                    'email' => 'myemail',
-                ],
-            ],
-            [
-                [
-                    'name' => 'A',
-                    'email' => 's',
-                ],
-            ],
         ];
+    }
+
+    /**
+     * This data provider contains invalid inputs for tests that are expected
+     * to fail during validation.
+     *
+     * @return array
+     */
+    public function invalidData(): array
+    {
+        return array_merge(
+            $this->singleInvalidData(),
+            [
+                [
+                    [
+                        'name' => '```',
+                        'email' => 'myemail',
+                    ],
+                ],
+                [
+                    [
+                        'name' => 'A',
+                        'email' => 's',
+                    ],
+                ],
+            ]
+        );
     }
 
     /**
@@ -219,5 +228,27 @@ class ValidationTraitTest extends TestCase
         $errors = $this->model->getErrors()->toArray();
         $this->assertArrayHasKey('name', $errors);
         $this->assertArrayHasKey('email', $errors);
+    }
+
+    /**
+     * Testing the ability to verify model validation errors after handling
+     * a {@see ValidationException}.
+     *
+     * @dataProvider singleInvalidData
+     * @depends testThrowingValidationExceptionAsExpected
+     * @param array $data
+     * @return void
+     */
+    public function testErrorMessagesAfterHandlingException(array $data): void
+    {
+        $this->model->fill($data);
+
+        try {
+            $this->model->validate();
+        } catch (ValidationException $e) {
+            $errors = $this->model->getErrors()->toArray();
+            $this->assertArrayHasKey('name', $errors);
+            $this->assertArrayHasKey('email', $errors);
+        }
     }
 }

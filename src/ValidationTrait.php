@@ -79,12 +79,12 @@ trait ValidationTrait
     {
         $validator = Validator::make($this->fields(), $this->rules());
         $pass = $validator->passes();
+        $this->errors = $validator->errors();
 
         if (!$pass && $throwException) {
             throw new ValidationException($validator);
         }
 
-        $this->errors = $validator->errors();
         return $pass;
     }
 
